@@ -56,7 +56,7 @@ func TestGetFlights(t *testing.T) {
 	}
 
 	handler := FlightHandlerImpl{
-		service: service,
+		Service: service,
 	}
 
 	req := httptest.NewRequest(

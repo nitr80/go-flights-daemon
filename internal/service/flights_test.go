@@ -51,7 +51,7 @@ func TestGetFlights(t *testing.T) {
 	}
 
 	service := FlightServiceImpl{
-		cache: cache,
+		Cache: cache,
 	}
 
 	query := model.QueryParameters{

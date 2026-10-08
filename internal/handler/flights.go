@@ -14,7 +14,7 @@ type FlightService interface {
 }
 
 type FlightHandlerImpl struct {
-	service FlightService
+	Service FlightService
 }
 
 func (handler *FlightHandlerImpl) GetFlights(w http.ResponseWriter, r *http.Request) {
@@ -81,7 +81,7 @@ func (handler *FlightHandlerImpl) GetFlights(w http.ResponseWriter, r *http.Requ
 	}
 	queryParameters.SortDirection = sortDirection
 
-	response, err := handler.service.GetFlights(queryParameters)
+	response, err := handler.Service.GetFlights(queryParameters)
 	
 	if err != nil {
 		// handle

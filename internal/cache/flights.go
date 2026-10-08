@@ -1,13 +1,11 @@
 package cache
 
 import (
-	"sync"
 
 	"nitr80.com/check24-go-daemon/internal/model"
 )
 
 type FlightCacheImpl struct {
-	Mu      sync.RWMutex
 	Flights []model.Flight
 }
 

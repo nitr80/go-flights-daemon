@@ -11,7 +11,7 @@ type FlightCache interface {
 }
 
 type FlightServiceImpl struct {
-	cache FlightCache
+	Cache FlightCache
 }
 
 // continue service, cache and handler; decide where to map the dto
@@ -25,7 +25,7 @@ func (service *FlightServiceImpl) GetFlights(queryParameters model.QueryParamete
 	}
 
 	start := time.Now()
-	flights := service.cache.GetFlights(filterParameters)
+	flights := service.Cache.GetFlights(filterParameters)
 	runtime := time.Since(start)
 
 	return model.QueryResponse{
