@@ -11,7 +11,7 @@ type FlightCacheImpl struct {
 	Flights []model.Flight
 }
 
-func (cache *FlightCacheImpl) GetFlights(filterParameters model.FilterParameters) ([]model.Flight) {
+func (cache *FlightCacheImpl) GetFlights(filterParameters model.FilterParameters) []model.Flight {
 	filterFlights := make([]model.Flight, 0)
 
 	for _, flight := range cache.Flights {

@@ -47,11 +47,11 @@ func createAirlineOffers(flights []model.Flight) []model.AirlineOffer {
 
 		if !exists {
 			offers[flight.Carrier] = &model.AirlineOffer{
-                Code: flight.Carrier,
-                PriceMin: flight.Price,
-                PriceMax: flight.Price,
-            }
-            continue
+				Code:     flight.Carrier,
+				PriceMin: flight.Price,
+				PriceMax: flight.Price,
+			}
+			continue
 		}
 
 		if offer.PriceMax < flight.Price {
@@ -65,9 +65,9 @@ func createAirlineOffers(flights []model.Flight) []model.AirlineOffer {
 
 	result := make([]model.AirlineOffer, 0, len(offers))
 
-    for _, offer := range offers {
-        result = append(result, *offer)
-    }
+	for _, offer := range offers {
+		result = append(result, *offer)
+	}
 
-    return result
+	return result
 }

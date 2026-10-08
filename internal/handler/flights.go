@@ -79,17 +79,57 @@ func (handler *FlightHandlerImpl) GetFlights(w http.ResponseWriter, r *http.Requ
 		http.Error(w, "invalid sort_direction", http.StatusBadRequest)
 		return
 	}
+	queryParameters.SortDirection = sortDirection
 
 	response, err := handler.service.GetFlights(queryParameters)
-
+	
 	if err != nil {
 		// handle
 		http.Error(w, "unhandled error", http.StatusInternalServerError)
 		return
 	}
+	responseDTO := toQueryResponseDTO(response)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
-	json.NewEncoder(w).Encode(response)
+	json.NewEncoder(w).Encode(responseDTO)
+}
+
+func toQueryResponseDTO(response model.QueryResponse) model.QueryResponseDTO {
+	flights := make([]model.FlightDTO, 0, len(response.Flights))
+	for _, flight := range response.Flights {
+
+		var returnDate string
+		if flight.ReturnDate != nil {
+			returnDate = flight.DepartureDate.Format("2006-01-02")
+		}
+		flights = append(flights, model.FlightDTO{
+			Departure:     flight.Departure,
+			Destination:   flight.Destination,
+			DepartureDate: flight.DepartureDate.Format("2006-01-02"),
+			ReturnDate:    returnDate,
+			Carrier:       flight.Carrier,
+			Price:         flight.Price,
+		})
+	}
+
+	airlineOffers := make([]model.AirlineOfferDTO, 0, len(response.AirlineOffers))
+	for _, offer := range response.AirlineOffers {
+		airlineOffers = append(airlineOffers, model.AirlineOfferDTO{
+			Code:     offer.Code,
+			PriceMin: offer.PriceMin,
+			PriceMax: offer.PriceMax,
+		})
+	}
+
+	return model.QueryResponseDTO{
+		Runtime:       response.Runtime,
+		FlightOffers:  response.FlightOffers,
+		PageCount:     response.PageCount,
+		CurrentPage:   response.CurrentPage,
+		PerPage:       response.PerPage,
+		AirlineOffers: airlineOffers,
+		Flights:       flights,
+	}
 }
