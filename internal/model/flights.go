@@ -65,10 +65,10 @@ type AirlineOfferDTO struct {
 }
 
 type FlightDTO struct {
-	Departure     string     `json:"departure"`
-	Destination   string     `json:"destination"`
+	Departure     string  `json:"departure"`
+	Destination   string  `json:"destination"`
 	DepartureDate string  `json:"date_departure"`
-	ReturnDate    string `json:"date_return"`
-	Carrier       string     `json:"carrier"`
-	Price         float64    `json:"price"`
+	ReturnDate    string  `json:"date_return"`
+	Carrier       string  `json:"carrier"`
+	Price         float64 `json:"price"`
 }

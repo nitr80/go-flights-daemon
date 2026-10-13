@@ -7,7 +7,6 @@ import (
 
 	"nitr80.com/check24-go-daemon/internal/cache"
 	"nitr80.com/check24-go-daemon/internal/handler"
-	"nitr80.com/check24-go-daemon/internal/loader"
 	"nitr80.com/check24-go-daemon/internal/service"
 )
 
@@ -18,17 +17,21 @@ func main() {
 		"./data_csv/ama_echo_ac.csv",
 		"./data_csv/ama_echo_ad.csv",
 		"./data_csv/ama_echo_ae.csv",
-		"./data_csv/ama_echo_ah.csv",
+		"./data_csv/ama_echo_af.csv",
 		"./data_csv/ama_echo_ag.csv",
 		"./data_csv/ama_echo_ah.csv",
 	}
 
-	flights, err := loader.LoadFlights(paths)
-	if err != nil {
-		log.Fatalf("failed to load flights: %v", err)
-	}
+	cache := cache.NewFlightCacheImpl()
 
-	cache := &cache.FlightCacheImpl{Flights: flights}
+	go func() {
+		err := cache.LoadFlights(paths)
+
+		if err != nil {
+			log.Printf("WARNING: flight data loading was incomplete: %v", err)
+		}
+	}()
+
 	service := &service.FlightServiceImpl{Cache: cache}
 	handler := &handler.FlightHandlerImpl{Service: service}
 
@@ -37,13 +40,12 @@ func main() {
 
 	fmt.Println("Serving and listening on :8080")
 
-	err = http.ListenAndServe(":8080", mux)
+	err := http.ListenAndServe(":8080", mux)
 
 	if err != nil {
 		log.Fatalf("failed to listen and serve: %v", err)
 	}
 }
-
 
 // Notes
 // 1 more hour i could implement optionals
@@ -54,4 +56,4 @@ func main() {
 // mapping is not so useful but i still makes sense
 // could have logged more and error handling could have been better (with wrapping)
 // I forgot to add constructor and it was a little late to add, but also not a big problem
-
+// caching between stops

@@ -8,6 +8,7 @@ import (
 
 type FlightCache interface {
 	GetFlights(filterParameters model.FilterParameters) []model.Flight
+	// LoadFlights(paths []string) error
 }
 
 type FlightServiceImpl struct {

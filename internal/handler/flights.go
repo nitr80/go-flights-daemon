@@ -82,7 +82,7 @@ func (handler *FlightHandlerImpl) GetFlights(w http.ResponseWriter, r *http.Requ
 	queryParameters.SortDirection = sortDirection
 
 	response, err := handler.Service.GetFlights(queryParameters)
-	
+
 	if err != nil {
 		// handle
 		http.Error(w, "unhandled error", http.StatusInternalServerError)
