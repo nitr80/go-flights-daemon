@@ -25,8 +25,32 @@ func NewFlightCacheImpl() *FlightCacheImpl {
 
 func (cache *FlightCacheImpl) GetFlights(filterParameters model.FilterParameters) []model.Flight {
 	key := createKeyWithFilterParameters(filterParameters)
-	// fmt.Println(key)
-	return cache.Flights[key]
+
+	flights := cache.Flights[key]
+
+	if len(filterParameters.Carrier) == 0 {
+		return flights
+	} else {
+		filteredFlights := make([]model.Flight, 0)
+
+		for _, flight := range flights {
+			if carrierMatches(flight, filterParameters.Carrier) {
+				filteredFlights = append(filteredFlights, flight)
+			}
+		}
+
+		return filteredFlights
+	}
+}
+
+func carrierMatches(flight model.Flight, carriers []string) bool {
+	for _, carrier := range carriers {
+		if carrier == flight.Carrier {
+			return true
+		}
+	}
+
+	return false
 }
 
 var ErrFlightNotInDE = errors.New("flight is not in german market")
