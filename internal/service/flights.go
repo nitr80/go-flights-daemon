@@ -1,6 +1,9 @@
 package service
 
 import (
+	"cmp"
+	"errors"
+	"slices"
 	"time"
 
 	"nitr80.com/check24-go-daemon/internal/model"
@@ -15,7 +18,8 @@ type FlightServiceImpl struct {
 	Cache FlightCache
 }
 
-// continue service, cache and handler; decide where to map the dto
+var ErrPageOutOfBounds = errors.New("current page is greater than page count")
+
 func (service *FlightServiceImpl) GetFlights(queryParameters model.QueryParameters) (model.QueryResponse, error) {
 	filterParameters := model.FilterParameters{
 		Departure:     queryParameters.Departure,
@@ -28,6 +32,47 @@ func (service *FlightServiceImpl) GetFlights(queryParameters model.QueryParamete
 	start := time.Now()
 	flights := service.Cache.GetFlights(filterParameters)
 	runtime := time.Since(start)
+
+	switch queryParameters.SortDirection {
+	case "", "ASC":
+		slices.SortFunc(flights, func(a, b model.Flight) int {
+			return cmp.Compare(a.Price, b.Price)
+		})
+	case "DESC":
+		slices.SortFunc(flights, func(a, b model.Flight) int {
+			return cmp.Compare(b.Price, a.Price)
+		})
+	}
+
+	if queryParameters.CurrentPage != nil && queryParameters.PerPage != nil {
+		pageCount := len(flights) / *queryParameters.PerPage
+		if len(flights) % *queryParameters.PerPage != 0 {
+			pageCount++
+		}
+
+		if pageCount < *queryParameters.CurrentPage {
+			return model.QueryResponse{}, ErrPageOutOfBounds
+		}
+
+		start := (*queryParameters.CurrentPage - 1) * *queryParameters.PerPage
+		end := start + *queryParameters.PerPage
+		if end > len(flights) {
+			end = len(flights)
+		}
+
+		pagedFlights := flights[start : end]
+
+		return model.QueryResponse{
+			Flights:       pagedFlights,
+			Runtime:       runtime.Seconds(),
+			FlightOffers:  len(flights),
+			PageCount:     pageCount,
+			CurrentPage:   *queryParameters.CurrentPage,
+			PerPage:       *queryParameters.PerPage,
+			AirlineOffers: createAirlineOffers(flights),
+		}, nil
+
+	}
 
 	return model.QueryResponse{
 		Flights:       flights,

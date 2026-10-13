@@ -2,11 +2,13 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
 
 	"nitr80.com/check24-go-daemon/internal/model"
+	"nitr80.com/check24-go-daemon/internal/service"
 )
 
 type FlightService interface {
@@ -33,7 +35,7 @@ func (handler *FlightHandlerImpl) GetFlights(w http.ResponseWriter, r *http.Requ
 
 	queryParameters.Carrier = airlines
 
-	if departure == "" || destination == "" || departureDateStr == "" || returnDateStr == "" {
+	if departure == "" || destination == "" || departureDateStr == "" {
 		http.Error(w, "departure, destination, departure_date and return_date are required", http.StatusBadRequest)
 		return
 	}
@@ -63,6 +65,10 @@ func (handler *FlightHandlerImpl) GetFlights(w http.ResponseWriter, r *http.Requ
 			return
 		}
 
+		if page < 0 {
+			http.Error(w, "invalid page", http.StatusBadRequest)
+			return
+		}
 		queryParameters.CurrentPage = &page
 	}
 
@@ -72,6 +78,12 @@ func (handler *FlightHandlerImpl) GetFlights(w http.ResponseWriter, r *http.Requ
 			http.Error(w, "invalid per_page", http.StatusBadRequest)
 			return
 		}
+
+		if perPage < 0 {
+			http.Error(w, "invalid per_page", http.StatusBadRequest)
+			return
+		}
+
 		queryParameters.PerPage = &perPage
 	}
 
@@ -84,7 +96,11 @@ func (handler *FlightHandlerImpl) GetFlights(w http.ResponseWriter, r *http.Requ
 	response, err := handler.Service.GetFlights(queryParameters)
 
 	if err != nil {
-		// handle
+		if errors.Is(err, service.ErrPageOutOfBounds) {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		
 		http.Error(w, "unhandled error", http.StatusInternalServerError)
 		return
 	}
