@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 
 	"nitr80.com/check24-go-daemon/internal/cache"
 	"nitr80.com/check24-go-daemon/internal/handler"
@@ -11,21 +13,24 @@ import (
 )
 
 func main() {
-	paths := []string{
-		"./data_csv/ama_echo_aa.csv",
-		"./data_csv/ama_echo_ab.csv",
-		"./data_csv/ama_echo_ac.csv",
-		"./data_csv/ama_echo_ad.csv",
-		"./data_csv/ama_echo_ae.csv",
-		"./data_csv/ama_echo_af.csv",
-		"./data_csv/ama_echo_ag.csv",
-		"./data_csv/ama_echo_ah.csv",
+
+	dir := os.Getenv("DIR_PATH")
+
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		log.Fatalf("failed read dir: %v", err)
+	}
+	var paths []string
+	for _, entry := range entries {
+		if !entry.IsDir() && filepath.Ext(entry.Name()) == ".csv" {
+			paths = append(paths, filepath.Join(dir, entry.Name()))
+		}
 	}
 
 	cache := cache.NewFlightCacheImpl()
 
 	go func() {
-		err := cache.LoadFlights(paths)
+		err = cache.LoadFlights(paths)
 
 		if err != nil {
 			log.Printf("WARNING: flight data loading was incomplete: %v", err)
@@ -40,7 +45,7 @@ func main() {
 
 	fmt.Println("Serving and listening on :8080")
 
-	err := http.ListenAndServe(":8080", mux)
+	err = http.ListenAndServe(":8080", mux)
 
 	if err != nil {
 		log.Fatalf("failed to listen and serve: %v", err)
