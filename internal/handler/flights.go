@@ -3,12 +3,13 @@ package handler
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
 
-	"nitr80.com/check24-go-daemon/internal/model"
-	"nitr80.com/check24-go-daemon/internal/service"
+	"nitr80.com/flights-daemon/internal/model"
+	"nitr80.com/flights-daemon/internal/service"
 )
 
 type FlightService interface {
@@ -65,7 +66,7 @@ func (handler *FlightHandlerImpl) GetFlights(w http.ResponseWriter, r *http.Requ
 			return
 		}
 
-		if page < 0 {
+		if page <= 0 {
 			http.Error(w, "invalid page", http.StatusBadRequest)
 			return
 		}
@@ -101,6 +102,7 @@ func (handler *FlightHandlerImpl) GetFlights(w http.ResponseWriter, r *http.Requ
 			return
 		}
 		
+		log.Printf("flights handler: service error: %v", err)
 		http.Error(w, "unhandled error", http.StatusInternalServerError)
 		return
 	}
@@ -109,7 +111,9 @@ func (handler *FlightHandlerImpl) GetFlights(w http.ResponseWriter, r *http.Requ
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
-	json.NewEncoder(w).Encode(responseDTO)
+	if err := json.NewEncoder(w).Encode(responseDTO); err != nil {
+		log.Printf("flights handler: failed to encode response: %v", err)
+	}
 }
 
 func toQueryResponseDTO(response model.QueryResponse) model.QueryResponseDTO {
@@ -118,7 +122,7 @@ func toQueryResponseDTO(response model.QueryResponse) model.QueryResponseDTO {
 
 		var returnDate string
 		if flight.ReturnDate != nil {
-			returnDate = flight.DepartureDate.Format("2006-01-02")
+			returnDate = flight.ReturnDate.Format("2006-01-02")
 		}
 		flights = append(flights, model.FlightDTO{
 			Departure:     flight.Departure,

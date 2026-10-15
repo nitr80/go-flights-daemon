@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"nitr80.com/check24-go-daemon/internal/model"
+	"nitr80.com/flights-daemon/internal/model"
 )
 
 type mockFlightService struct {

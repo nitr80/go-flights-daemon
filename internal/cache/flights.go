@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"nitr80.com/check24-go-daemon/internal/model"
+	"nitr80.com/flights-daemon/internal/model"
 )
 
 type FlightCacheImpl struct {
@@ -26,14 +26,18 @@ func NewFlightCacheImpl() *FlightCacheImpl {
 func (cache *FlightCacheImpl) GetFlights(filterParameters model.FilterParameters) []model.Flight {
 	key := createKeyWithFilterParameters(filterParameters)
 
+	cache.Mu.RLock()
 	flights := cache.Flights[key]
+	// Copy the slice so we can safely release the lock before filtering.
+	flightsCopy := append([]model.Flight(nil), flights...)
+	cache.Mu.RUnlock()
 
 	if len(filterParameters.Carrier) == 0 {
-		return flights
+		return flightsCopy
 	} else {
 		filteredFlights := make([]model.Flight, 0)
 
-		for _, flight := range flights {
+		for _, flight := range flightsCopy {
 			if carrierMatches(flight, filterParameters.Carrier) {
 				filteredFlights = append(filteredFlights, flight)
 			}

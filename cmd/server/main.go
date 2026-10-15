@@ -7,9 +7,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"nitr80.com/check24-go-daemon/internal/cache"
-	"nitr80.com/check24-go-daemon/internal/handler"
-	"nitr80.com/check24-go-daemon/internal/service"
+	"nitr80.com/flights-daemon/internal/cache"
+	"nitr80.com/flights-daemon/internal/handler"
+	"nitr80.com/flights-daemon/internal/service"
 )
 
 func main() {

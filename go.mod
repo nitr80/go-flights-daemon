@@ -1,3 +1,3 @@
-module nitr80.com/check24-go-daemon
+module nitr80.com/flights-daemon
 
 go 1.27.1

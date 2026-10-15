@@ -6,7 +6,7 @@ import (
 	"slices"
 	"time"
 
-	"nitr80.com/check24-go-daemon/internal/model"
+	"nitr80.com/flights-daemon/internal/model"
 )
 
 type FlightCache interface {
@@ -29,9 +29,9 @@ func (service *FlightServiceImpl) GetFlights(queryParameters model.QueryParamete
 		Carrier:       queryParameters.Carrier,
 	}
 
-	start := time.Now()
+	startTime := time.Now()
 	flights := service.Cache.GetFlights(filterParameters)
-	runtime := time.Since(start)
+	
 
 	switch queryParameters.SortDirection {
 	case "", "ASC":
@@ -61,6 +61,7 @@ func (service *FlightServiceImpl) GetFlights(queryParameters model.QueryParamete
 		}
 
 		pagedFlights := flights[start : end]
+		runtime := time.Since(startTime)
 
 		return model.QueryResponse{
 			Flights:       pagedFlights,
@@ -73,6 +74,8 @@ func (service *FlightServiceImpl) GetFlights(queryParameters model.QueryParamete
 		}, nil
 
 	}
+
+	runtime := time.Since(startTime)
 
 	return model.QueryResponse{
 		Flights:       flights,
