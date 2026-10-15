@@ -116,3 +116,38 @@ func TestGetFlights(t *testing.T) {
 	})
 
 }
+
+func TestLoadFlights(t *testing.T) {
+	cache := NewFlightCacheImpl()
+
+	err := cache.LoadFlights([]string{"testdata/test1.csv", "testdata/test2.csv"})
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	departureDate := time.Date(2022, 6, 10, 0, 0, 0, 0, time.UTC)
+	returnDate := time.Date(2022, 6, 16, 0, 0, 0, 0, time.UTC)
+
+	filter := model.FilterParameters{
+		Departure:     "CGN",
+		Destination:   "STR",
+		DepartureDate: departureDate,
+		ReturnDate:    &returnDate,
+	}
+
+	flights := cache.GetFlights(filter)
+	if len(flights) != 15 {
+		t.Fatalf("expected 15 flights, got %d", len(flights))
+	}
+
+	for _, flight := range flights {
+		if flight.Carrier != "LH" {
+			t.Errorf("expected carrier LH, got %s", flight.Carrier)
+		}
+	}
+
+	filter.Carrier = []string{"XX"}
+	if filtered := cache.GetFlights(filter); len(filtered) != 0 {
+		t.Errorf("expected 0 flights for unknown carrier, got %d", len(filtered))
+	}
+}

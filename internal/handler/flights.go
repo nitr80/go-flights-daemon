@@ -37,7 +37,7 @@ func (handler *FlightHandlerImpl) GetFlights(w http.ResponseWriter, r *http.Requ
 	queryParameters.Carrier = airlines
 
 	if departure == "" || destination == "" || departureDateStr == "" {
-		http.Error(w, "departure, destination, departure_date and return_date are required", http.StatusBadRequest)
+		http.Error(w, "departure, destination and departure_date are required", http.StatusBadRequest)
 		return
 	}
 	queryParameters.Departure = departure
@@ -80,7 +80,7 @@ func (handler *FlightHandlerImpl) GetFlights(w http.ResponseWriter, r *http.Requ
 			return
 		}
 
-		if perPage < 0 {
+		if perPage <= 0 {
 			http.Error(w, "invalid per_page", http.StatusBadRequest)
 			return
 		}

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -86,19 +87,9 @@ func (cache *FlightCacheImpl) LoadFlights(paths []string) error {
 
 	for flight := range results {
 		key := createKeyWithFlight(flight)
-		flights, ok := cache.Flights[key]
-		if !ok {
-			cache.Mu.Lock()
-			newFlights := make([]model.Flight, 0)
-			newFlights = append(newFlights, flight)
-			cache.Flights[key] = newFlights
-			cache.Mu.Unlock()
-		} else {
-			cache.Mu.Lock()
-			flights = append(flights, flight)
-			cache.Flights[key] = flights
-			cache.Mu.Unlock()
-		}
+		cache.Mu.Lock()
+		cache.Flights[key] = append(cache.Flights[key], flight)
+		cache.Mu.Unlock()
 	}
 
 	var firstErr error
@@ -161,13 +152,12 @@ func readFlights(filename string, results chan<- model.Flight) error {
 
 		flight, err := parseFlight(record)
 		if err != nil {
-			if errors.Is(err, ErrFlightNotInDE) || errors.Is(err, ErrNoAdult) {
+			if errors.Is(err, ErrFlightNotInDE) {
 				continue
-			} else {
-				return err
 			}
+			log.Printf("Skipping invalid flight record in %s: %v", filename, err)
+			continue
 		}
-
 		results <- flight
 	}
 
@@ -176,7 +166,7 @@ func readFlights(filename string, results chan<- model.Flight) error {
 
 func parseFlight(record []string) (model.Flight, error) {
 	if len(record) != 133 {
-		return model.Flight{}, fmt.Errorf("invalid record: expected at least 133 fields, got %d", len(record))
+		return model.Flight{}, fmt.Errorf("invalid record: expected exactly 133 fields, got %d", len(record))
 	}
 
 	if record[2] != "DE" {
@@ -212,7 +202,6 @@ func parseFlight(record []string) (model.Flight, error) {
 		return model.Flight{}, err
 	}
 
-	adults := passengers["ADT"]
 	// children := passengers["CHI"]
 
 	adults, ok := passengers["ADT"]
