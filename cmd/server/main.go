@@ -7,14 +7,22 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/joho/godotenv"
 	"nitr80.com/flights-daemon/internal/cache"
 	"nitr80.com/flights-daemon/internal/handler"
 	"nitr80.com/flights-daemon/internal/service"
 )
 
 func main() {
+    if err := godotenv.Load(); err != nil {
+        log.Println("No .env file found; using environment variables")
+    }
 
-	dir := os.Getenv("DIR_PATH")
+    dir := os.Getenv("DIR_PATH")
+
+    if dir == "" {
+        log.Fatal("DIR_PATH environment variable is not set")
+    }
 
 	entries, err := os.ReadDir(dir)
 	if err != nil {
@@ -30,18 +38,18 @@ func main() {
 	cache := cache.NewFlightCacheImpl()
 
 	go func() {
-		err = cache.LoadFlights(paths)
-
-		if err != nil {
+		if err := cache.LoadFlights(paths); err != nil {
 			log.Printf("WARNING: flight data loading was incomplete: %v", err)
 		}
 	}()
 
 	service := &service.FlightServiceImpl{Cache: cache}
-	handler := &handler.FlightHandlerImpl{Service: service}
+	statusHandler := &handler.StatusHandlerImpl{Cache: cache}
+	flightHandler := &handler.FlightHandlerImpl{Service: service}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /flights", handler.GetFlights)
+	mux.HandleFunc("GET /flights", flightHandler.GetFlights)
+	mux.HandleFunc("GET /status", statusHandler.GetStatus)
 
 	fmt.Println("Serving and listening on :8080")
 

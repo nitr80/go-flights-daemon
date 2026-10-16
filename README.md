@@ -92,6 +92,26 @@ The endpoint returns a JSON response containing the matching flights and paginat
 }
 ```
 
+### `GET /status`
+
+Reports whether flight data loading has finished.
+
+| Field | Description |
+|---|---|
+| `loading` | `true` while CSV files are still being loaded; responses may be incomplete. |
+| `load_error` | `true` if loading finished with an error. |
+
+Returns `200 OK` while loading or when loading completed successfully, and `503 Service Unavailable` if loading failed. The error details are logged server-side.
+
+**Example response:**
+
+```json
+{
+  "loading": false,
+  "load_error": false
+}
+```
+
 ## Data Loading and Availability
 
 At startup, the daemon reads flight data from multiple CSV files and stores the parsed records in its in-memory cache.

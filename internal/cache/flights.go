@@ -18,10 +18,23 @@ import (
 type FlightCacheImpl struct {
 	Mu      sync.RWMutex
 	Flights map[string][]model.Flight
+
+	loading bool
+	loadErr error
 }
 
 func NewFlightCacheImpl() *FlightCacheImpl {
-	return &FlightCacheImpl{Flights: make(map[string][]model.Flight)}
+	return &FlightCacheImpl{
+		Flights: make(map[string][]model.Flight),
+		loading: true,
+	}
+}
+
+func (cache *FlightCacheImpl) GetLoadStatus() (bool, error) {
+	cache.Mu.RLock()
+	defer cache.Mu.RUnlock()
+
+	return cache.loading, cache.loadErr
 }
 
 func (cache *FlightCacheImpl) GetFlights(filterParameters model.FilterParameters) []model.Flight {
@@ -98,6 +111,11 @@ func (cache *FlightCacheImpl) LoadFlights(paths []string) error {
 			firstErr = err
 		}
 	}
+
+	cache.Mu.Lock()
+	cache.loading = false
+	cache.loadErr = firstErr
+	cache.Mu.Unlock()
 
 	if firstErr != nil {
 		return firstErr

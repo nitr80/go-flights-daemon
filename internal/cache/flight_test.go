@@ -120,9 +120,17 @@ func TestGetFlights(t *testing.T) {
 func TestLoadFlights(t *testing.T) {
 	cache := NewFlightCacheImpl()
 
+	if loading, err := cache.GetLoadStatus(); !loading || err != nil {
+		t.Fatalf("expected loading before load, got loading=%v err=%v", loading, err)
+	}
+
 	err := cache.LoadFlights([]string{"testdata/test1.csv", "testdata/test2.csv"})
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
+	}
+
+	if loading, err := cache.GetLoadStatus(); loading || err != nil {
+		t.Errorf("expected finished without error, got loading=%v err=%v", loading, err)
 	}
 
 	departureDate := time.Date(2022, 6, 10, 0, 0, 0, 0, time.UTC)
@@ -149,5 +157,18 @@ func TestLoadFlights(t *testing.T) {
 	filter.Carrier = []string{"XX"}
 	if filtered := cache.GetFlights(filter); len(filtered) != 0 {
 		t.Errorf("expected 0 flights for unknown carrier, got %d", len(filtered))
+	}
+}
+
+func TestLoadFlightsReportsFailure(t *testing.T) {
+	cache := NewFlightCacheImpl()
+
+	if err := cache.LoadFlights([]string{"testdata/does-not-exist.csv"}); err == nil {
+		t.Fatal("expected an error for a missing file")
+	}
+
+	loading, err := cache.GetLoadStatus()
+	if loading || err == nil {
+		t.Errorf("expected finished with error, got loading=%v err=%v", loading, err)
 	}
 }
